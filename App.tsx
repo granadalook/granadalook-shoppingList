@@ -10,22 +10,27 @@ import {
   StyleSheet,
   Image,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 const App = () => {
-  // Estados para autenticación
   const [user, setUser] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true);
+  interface ShoppingList {
+    id: string;
+    name: string;
+    owner: string | null;
+    sharedWith: string[];
+    items: string[];
+  }
 
-  // Estados para lista de compras
-  const [shoppingLists, setShoppingLists] = useState<any[]>([]); // cada lista: { id, name, owner, sharedWith, items }
+  const [shoppingLists, setShoppingLists] = useState<ShoppingList[]>([]);
   const [listName, setListName] = useState('');
   const [currentListId, setCurrentListId] = useState<string | null>(null);
   const [newItem, setNewItem] = useState('');
   const [shareEmail, setShareEmail] = useState('');
 
-  // Simulación de usuarios y auth (en memoria)
   const users: any = {
     'user1@mail.com': '1234',
     'guest@mail.com': 'guest',
@@ -37,7 +42,12 @@ const App = () => {
       users[email] = password;
       setUser(email);
     } else {
-      alert('Usuario ya existe');
+      Toast.show({
+        type: 'error',
+        position: 'bottom',
+        text1: 'Error',
+        text2: 'El correo ya está registrado.',
+      });
     }
   };
 
@@ -45,7 +55,12 @@ const App = () => {
     if (users[email] === password) {
       setUser(email);
     } else {
-      alert('Credenciales inválidas');
+      Toast.show({
+        type: 'error',
+        position: 'bottom',
+        text1: 'Error',
+        text2: 'Credenciales inválidas.',
+      });
     }
   };
 
@@ -72,6 +87,38 @@ const App = () => {
   };
 
   const shareList = (id: string, sharedUser: string) => {
+    if (!sharedUser) {
+      Toast.show({
+        type: 'error',
+        position: 'bottom',
+        text1: 'Error',
+        text2: 'No puedes compartir con un usuario vacío.',
+      });
+      return;
+    }
+
+    const selectedList = shoppingLists.find(list => list.id === id);
+    if (selectedList?.sharedWith.includes(sharedUser)) {
+      Toast.show({
+        type: 'error',
+        position: 'bottom',
+        text1: 'Error',
+        text2: 'Este usuario ya tiene acceso a la lista.',
+      });
+      return;
+    }
+
+    const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    if (!emailPattern.test(sharedUser)) {
+      Toast.show({
+        type: 'error',
+        position: 'bottom',
+        text1: 'Error',
+        text2: 'Por favor, ingresa un correo electrónico válido.',
+      });
+      return;
+    }
+
     setShoppingLists(
       shoppingLists.map(list =>
         list.id === id
@@ -82,9 +129,26 @@ const App = () => {
           : list,
       ),
     );
+
+    Toast.show({
+      type: 'success',
+      position: 'top',
+      text1: 'Compartido',
+      text2: `Lista compartida con éxito con ${sharedUser}`,
+    });
   };
 
   const addItem = () => {
+    if (!newItem.trim()) {
+      Toast.show({
+        type: 'error',
+        position: 'bottom',
+        text1: 'Error',
+        text2: 'No puedes agregar un producto vacío.',
+      });
+      return;
+    }
+
     setShoppingLists(
       shoppingLists.map(list => {
         if (list.id === currentListId) {
@@ -94,6 +158,12 @@ const App = () => {
       }),
     );
     setNewItem('');
+    Toast.show({
+      type: 'success',
+      position: 'bottom',
+      text1: 'Producto agregado',
+      text2: `${newItem} ha sido agregado a la lista.`,
+    });
   };
 
   const removeItem = (item: string) => {
@@ -105,23 +175,24 @@ const App = () => {
         return list;
       }),
     );
+    Toast.show({
+      type: 'success',
+      position: 'bottom',
+      text1: 'Producto eliminado',
+      text2: `${item} ha sido eliminado de la lista.`,
+    });
   };
 
-  // Este es el bloque donde se renderiza el login
   if (!user) {
     return (
       <SafeAreaView style={styles.container}>
-        {/* Título de la app */}
         <Text style={styles.appTitle}>Mi Lista de Compras</Text>
-
-        {/* Icono o imagen */}
         <Image
           source={{
             uri: 'https://media.istockphoto.com/id/1435832173/es/vector/manos-sosteniendo-portapapeles-con-lista-de-verificaci%C3%B3n-con-marcas-de-verificaci%C3%B3n-verdes-y.jpg?s=612x612&w=0&k=20&c=PUT9UEVS8jM8a0rfwepcD5Hmi3Qll5LWTVMsiJ5onZs=',
-          }} // Puedes poner la URL de la imagen o un icono local
+          }}
           style={styles.icon}
         />
-
         <Text>{isLogin ? 'Iniciar sesión' : 'Registrarse'}</Text>
         <TextInput
           placeholder="Email"
@@ -214,6 +285,7 @@ const App = () => {
                 setShareEmail('');
               }
             }}
+            disabled={!shareEmail}
           />
         </View>
       )}
@@ -266,41 +338,14 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
 });
-/* const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    marginTop: 40,
-    alignItems: 'center', // Centra el contenido
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    marginVertical: 5,
-    width: '80%', // Ajusta el tamaño del input
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 16,
-    marginTop: 15,
-    fontWeight: '600',
-  },
-  listItem: {
-    padding: 10,
-    backgroundColor: '#f2f2f2',
-    marginVertical: 4,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 5,
-  },
-}); */
 
-export default App;
+const RootApp = () => {
+  return (
+    <>
+      <App />
+      <Toast />
+    </>
+  );
+};
+
+export default RootApp;
