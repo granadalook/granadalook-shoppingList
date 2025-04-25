@@ -71,6 +71,12 @@ const App = () => {
 
   const createList = () => {
     if (listName) {
+      Toast.show({
+        type: 'success',
+        position: 'top',
+        text1: 'Lista creada',
+        text2: `La lista ${listName} ha sido creada.`,
+      });
       const id = Date.now().toString();
       setShoppingLists([
         ...shoppingLists,
@@ -236,7 +242,11 @@ const App = () => {
         onChangeText={setListName}
         style={styles.input}
       />
-      <Button title="Crear nueva lista" onPress={createList} />
+      <Button
+        disabled={!listName}
+        title="Crear nueva lista"
+        onPress={createList}
+      />
 
       <Text style={styles.subtitle}>Tus listas</Text>
       <FlatList
