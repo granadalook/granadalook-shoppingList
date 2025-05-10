@@ -9,148 +9,111 @@ import { AddItemForm } from '../molecules/AddItemForm';
 import { ShareListForm } from '../molecules/ShareListForm';
 import { RowView } from '../atoms/RowView';
 
-interface ShoppingList {
-  id: string;
-  name: string;
-  owner: string | null;
-  sharedWith: string[];
-  items: string[];
-}
+import { useDispatch, useSelector } from 'react-redux';
+import { logout as logoutAction } from '../../store/authSlice';
+import {
+  createList as createListAction,
+  addItem as addItemAction,
+  removeItem as removeItemAction,
+  shareList as shareListAction,
+ } from '../../store/listsSlice';
+import { RootState } from '../../store';
 
 export const HomeContainer = ({ navigation }: { navigation: any }) => {
-  const [user, setUser] = useState<string | null>(null);
-  const [shoppingLists, setShoppingLists] = useState<ShoppingList[]>([]);
+  const dispatch = useDispatch();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const shoppingLists = useSelector((state: RootState) => state.lists.lists);
+
   const [listName, setListName] = useState('');
   const [currentListId, setCurrentListId] = useState<string | null>(null);
   const [newItem, setNewItem] = useState('');
   const [shareEmail, setShareEmail] = useState('');
 
   const logout = () => {
-    setUser(null);
+    dispatch(logoutAction());
     setCurrentListId(null);
     navigation.pop();
   };
 
   const createList = () => {
-    if (!listName.trim()) {return;}
-
+    if (!listName.trim()) return;
     const id = Date.now().toString();
-    const newList: ShoppingList = {
-      id,
-      name: listName.trim(),
-      owner: user,
-      sharedWith: [],
-      items: [],
-    };
-
-    setShoppingLists(prev => [...prev, newList]);
+    dispatch(createListAction({ id, name: listName.trim(), owner: user }));
     setListName('');
     Toast.show({
       type: 'success',
       position: 'top',
       text1: 'Lista creada',
-      text2: `La lista "${newList.name}" ha sido creada.`,
+      text2: `La lista "${listName.trim()}" ha sido creada.`,
     });
   };
 
-  const shareList = (id: string, sharedUser: string) => {
+  const shareList = (listId: string, sharedUser: string) => {
     if (!sharedUser.trim()) {
-      Toast.show({
+      return Toast.show({
         type: 'error',
         position: 'bottom',
         text1: 'Error',
         text2: 'No puedes compartir con un usuario vacío.',
       });
-      return;
     }
     const emailPattern = /^[\w._-]+@[\w.-]+\.[A-Za-z]{2,6}$/;
     if (!emailPattern.test(sharedUser)) {
-      Toast.show({
+      return Toast.show({
         type: 'error',
         position: 'bottom',
         text1: 'Error',
         text2: 'Por favor, ingresa un correo válido.',
       });
-      return;
     }
-
-    setShoppingLists(prev =>
-      prev.map(list => {
-        if (list.id === id) {
-          if (list.sharedWith.includes(sharedUser)) {
-            Toast.show({
-              type: 'error',
-              position: 'bottom',
-              text1: 'Error',
-              text2: 'Este usuario ya tiene acceso a la lista.',
-            });
-            return list;
-          }
-          Toast.show({
-            type: 'success',
-            position: 'top',
-            text1: 'Compartido',
-            text2: `Lista compartida con ${sharedUser}`,
-          });
-          return { ...list, sharedWith: [...list.sharedWith, sharedUser] };
-        }
-        return list;
-      }),
-    );
-
+    const list = shoppingLists.find(l => l.id === listId);
+    if (list?.sharedWith.includes(sharedUser)) {
+      return Toast.show({
+        type: 'error',
+        position: 'bottom',
+        text1: 'Error',
+        text2: 'Este usuario ya tiene acceso a la lista.',
+      });
+    }
+    dispatch(shareListAction({ listId, user: sharedUser }));
     setShareEmail('');
+    Toast.show({
+      type: 'success',
+      position: 'top',
+      text1: 'Compartido',
+      text2: `Lista compartida con ${sharedUser}`,
+    });
   };
 
   const addItem = () => {
     if (!newItem.trim()) {
-      Toast.show({
+      return Toast.show({
         type: 'error',
         position: 'bottom',
         text1: 'Error',
         text2: 'No puedes agregar un producto vacío.',
       });
-      return;
     }
-    setShoppingLists(prev =>
-      prev.map(list => {
-        if (list.id === currentListId) {
-          const updated = { ...list, items: [...list.items, newItem.trim()] };
-          Toast.show({
-            type: 'success',
-            position: 'bottom',
-            text1: 'Producto agregado',
-            text2: `"${newItem.trim()}" agregado a "${list.name}".`,
-          });
-          return updated;
-        }
-        return list;
-      }),
-    );
+    dispatch(addItemAction({ listId: currentListId!, item: newItem.trim() }));
+    Toast.show({
+      type: 'success',
+      position: 'bottom',
+      text1: 'Producto agregado',
+      text2: `"${newItem.trim()}" agregado.`,
+    });
     setNewItem('');
   };
 
   const removeItem = (item: string) => {
-    setShoppingLists(prev =>
-      prev.map(list => {
-        if (list.id === currentListId) {
-          const updated = {
-            ...list,
-            items: list.items.filter(i => i !== item),
-          };
-          Toast.show({
-            type: 'success',
-            position: 'bottom',
-            text1: 'Producto eliminado',
-            text2: `"${item}" eliminado de "${list.name}".`,
-          });
-          return updated;
-        }
-        return list;
-      }),
-    );
+    dispatch(removeItemAction({ listId: currentListId!, item }));
+    Toast.show({
+      type: 'success',
+      position: 'bottom',
+      text1: 'Producto eliminado',
+      text2: `"${item}" eliminado.`,
+    });
   };
 
-  // Filtramos las listas del usuario (propietario o compartidas)
   const userLists = shoppingLists.filter(
     l => l.owner === user || (user != null && l.sharedWith.includes(user)),
   );
@@ -188,9 +151,7 @@ export const HomeContainer = ({ navigation }: { navigation: any }) => {
           <ShareListForm
             shareEmail={shareEmail}
             onChange={setShareEmail}
-            onSubmit={() =>
-              shareList(selectedList.id, shareEmail.trim())
-            }
+            onSubmit={() => shareList(selectedList.id, shareEmail.trim())}
           />
         </>
       )}

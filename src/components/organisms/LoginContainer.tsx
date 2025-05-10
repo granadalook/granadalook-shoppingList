@@ -1,38 +1,68 @@
 import React, { useState } from 'react';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { useDispatch } from 'react-redux';
+import { login as loginAction } from '../../store/authSlice';
 import { AppTitle } from '../atoms/AppTitle';
 import { Icon } from '../atoms/Icon';
 import { AuthForm } from '../molecules/AuthForm';
 import { AuthToggle } from '../molecules/AuthToggle';
 
-export const LoginContainer = ({ navigation }) => {
-  const [user, setUser] = useState<string | null>(null);
+const initialUsers: Record<string, string> = {
+  'test1@mail.com': '1234',
+  'test2@mail.com': '1234',
+  'test3@mail.com': '1234',
+};
+
+export const LoginContainer = ({ navigation }: { navigation: any }) => {
+  const dispatch = useDispatch();
+  const [users, setUsers] = useState<Record<string, string>>(initialUsers);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true);
 
-  const users: Record<string, string> = {
-    'test1@mail.com': '1234',
-    'test2@mail.com': '1234',
-    'test3@mail.com': '1234',
-  };
-
   const handleRegister = () => {
-    if (!users[email]) {
-      users[email] = password;
-      setUser(email);
-    } else {
-      Toast.show({ type: 'error', position: 'bottom', text1: 'Error', text2: 'El correo ya está registrado.' });
+    if (!email.trim() || !password) {
+      Toast.show({
+        type: 'error',
+        position: 'bottom',
+        text1: 'Error',
+        text2: 'Email y contraseña requeridos.',
+      });
+      return;
     }
+    if (users[email]) {
+      Toast.show({
+        type: 'error',
+        position: 'bottom',
+        text1: 'Error',
+        text2: 'El correo ya está registrado.',
+      });
+      return;
+    }
+    // Agregar nuevo usuario
+    setUsers(prev => ({ ...prev, [email]: password }));
+    dispatch(loginAction(email));        // ← Guardamos en Redux
+    Toast.show({
+      type: 'success',
+      position: 'top',
+      text1: 'Registro exitoso',
+      text2: `Bienvenido, ${email}!`,
+    });
+    navigation.navigate('Home');
   };
 
   const handleLogin = () => {
     if (users[email] === password) {
-      setUser(email);
+      dispatch(loginAction(email));      // ← Guardamos en Redux
       navigation.navigate('Home');
     } else {
-      Toast.show({ type: 'error', position: 'bottom', text1: 'Error', text2: 'Credenciales inválidas.' });
+      Toast.show({
+        type: 'error',
+        position: 'bottom',
+        text1: 'Error',
+        text2: 'Credenciales inválidas.',
+      });
     }
   };
 
