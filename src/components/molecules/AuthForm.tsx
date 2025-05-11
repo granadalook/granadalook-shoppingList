@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { InputField } from '../atoms/InputField';
 import { PrimaryButton } from '../atoms/PrimaryButton';
 
@@ -20,9 +20,9 @@ export const AuthForm: React.FC<AuthFormProps> = ({
   onPasswordChange,
   onSubmit,
 }) => (
-  <View>
-    <Text>{isLogin ? 'Iniciar sesión' : 'Registrarse'}</Text>
-    <InputField placeholder="Email" value={email} onChangeText={onEmailChange} secure={undefined} />
+  <View style={styles.container}>
+    <Text style={styles.title}>{isLogin ? 'Iniciar sesión' : 'Registrarse'}</Text>
+    <InputField placeholder="Email" value={email} onChangeText={onEmailChange} />
     <InputField
       placeholder="Contraseña"
       secure
@@ -35,3 +35,18 @@ export const AuthForm: React.FC<AuthFormProps> = ({
     />
   </View>
 );
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 20,
+    backgroundColor: '#f4f4f4',
+    flex: 1,
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 22,
+    marginBottom: 20,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+});

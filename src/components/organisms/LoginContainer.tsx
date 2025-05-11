@@ -2,69 +2,96 @@ import React, { useState } from 'react';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useDispatch } from 'react-redux';
+import axios from 'axios';
 import { login as loginAction } from '../../store/authSlice';
 import { AppTitle } from '../atoms/AppTitle';
 import { Icon } from '../atoms/Icon';
 import { AuthForm } from '../molecules/AuthForm';
 import { AuthToggle } from '../molecules/AuthToggle';
 
-const initialUsers: Record<string, string> = {
-  'test1@mail.com': '1234',
-  'test2@mail.com': '1234',
-  'test3@mail.com': '1234',
-};
-
 export const LoginContainer = ({ navigation }: { navigation: any }) => {
   const dispatch = useDispatch();
-  const [users, setUsers] = useState<Record<string, string>>(initialUsers);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true);
 
-  const handleRegister = () => {
-    if (!email.trim() || !password) {
-      Toast.show({
-        type: 'error',
-        position: 'bottom',
-        text1: 'Error',
-        text2: 'Email y contraseña requeridos.',
-      });
-      return;
-    }
-    if (users[email]) {
-      Toast.show({
-        type: 'error',
-        position: 'bottom',
-        text1: 'Error',
-        text2: 'El correo ya está registrado.',
-      });
-      return;
-    }
-    // Agregar nuevo usuario
-    setUsers(prev => ({ ...prev, [email]: password }));
-    dispatch(loginAction(email));        // ← Guardamos en Redux
+  const showToast = (type: 'success' | 'error', title: string, message: string) => {
     Toast.show({
-      type: 'success',
-      position: 'top',
-      text1: 'Registro exitoso',
-      text2: `Bienvenido, ${email}!`,
+      type,
+      position: type === 'error' ? 'bottom' : 'top',
+      text1: title,
+      text2: message,
     });
-    navigation.navigate('Home');
   };
 
-  const handleLogin = () => {
-    if (users[email] === password) {
-      dispatch(loginAction(email));      // ← Guardamos en Redux
-      navigation.navigate('Home');
-    } else {
-      Toast.show({
-        type: 'error',
-        position: 'bottom',
-        text1: 'Error',
-        text2: 'Credenciales inválidas.',
-      });
-    }
-  };
+const handleRegister = async () => {
+  if (!email.trim() || !password) {
+    showToast('error', 'Error', 'Nombre de usuario y contraseña requeridos.');
+    return;
+  }
+
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+  if (!passwordRegex.test(password)) {
+    showToast('error', 'Error', 'La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.');
+    return;
+  }
+
+  try {
+    const payload = {
+      userName: email,
+      email: `${email}@mail.com`,
+      password: password,
+      politicas: true,
+    };
+    const response = await axios.post(
+      'https://topsecret-back-end.onrender.com/user',
+      payload,
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+    console.log('API register response:', response.data);
+    showToast('success', '¡Registro exitoso!', `Usuario ${response.data.userName} creado.`);
+    const token = response.data.userName;
+    dispatch(loginAction(token));
+    navigation.navigate('Home');
+  } catch (err: any) {
+    const msg = err.response?.data?.message ?? 'Error al registrar usuario.';
+    showToast('error', 'Error', msg);
+  }
+};
+
+
+const handleLogin = async () => {
+  if (!email.trim() || !password) {
+    showToast('error', 'Error', 'Email y contraseña requeridos.');
+    return;
+  }
+
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+  if (!passwordRegex.test(password)) {
+    showToast(
+      'error',
+      'Error',
+      'La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.'
+    );
+    return;
+  }
+
+  try {
+    const response = await axios.post(
+      'https://topsecret-back-end.onrender.com/auth/login',
+      { userName: email, password }
+    );
+    console.log('API login response:', response.data);
+
+    const token = response.data.user.userName;
+    dispatch(loginAction(token));
+    showToast('success', '¡Bienvenido!', `Has iniciado sesión como ${token}.`);
+    navigation.navigate('Home');
+  } catch (err: any) {
+    const msg = err.response?.data?.message ?? 'Error al iniciar sesión.';
+    showToast('error', 'Error', msg);
+  }
+};
 
   return (
     <SafeAreaView style={styles.container}>
