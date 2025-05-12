@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { FlatList, SafeAreaView, StyleSheet } from 'react-native';
+import {
+  SafeAreaView,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import Toast from 'react-native-toast-message';
 import { HeaderTitle } from '../atoms/HeaderTitle';
 import { LogoutButton } from '../atoms/LogoutButton';
@@ -16,7 +22,7 @@ import {
   addItem as addItemAction,
   removeItem as removeItemAction,
   shareList as shareListAction,
- } from '../../store/listsSlice';
+} from '../../store/listsSlice';
 import { RootState } from '../../store';
 
 export const HomeContainer = ({ navigation }: { navigation: any }) => {
@@ -121,41 +127,46 @@ export const HomeContainer = ({ navigation }: { navigation: any }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <HeaderTitle user={user ?? 'Invitado'} />
-      <LogoutButton onPress={logout} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'android' ? undefined : 'padding'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 100 }}
+          keyboardShouldPersistTaps='handled'
+        >
+          <HeaderTitle user={user ?? 'Invitado'} />
+          <LogoutButton onPress={logout} />
 
-      <CreateListForm
-        listName={listName}
-        onChange={setListName}
-        onSubmit={createList}
-      />
-
-      <ListSelector lists={userLists} onSelect={setCurrentListId} />
-
-      {selectedList && (
-        <>
-          <AddItemForm
-            newItem={newItem}
-            onChange={setNewItem}
-            onSubmit={addItem}
+          <CreateListForm
+            listName={listName}
+            onChange={setListName}
+            onSubmit={createList}
           />
 
-          <FlatList
-            data={selectedList.items}
-            keyExtractor={(item, idx) => item + idx}
-            renderItem={({ item }) => (
-              <RowView item={item} onRemove={removeItem} />
-            )}
-          />
+          <ListSelector lists={userLists} onSelect={setCurrentListId} />
 
-          <ShareListForm
-            shareEmail={shareEmail}
-            onChange={setShareEmail}
-            onSubmit={() => shareList(selectedList.id, shareEmail.trim())}
-          />
-        </>
-      )}
+          {selectedList && (
+            <>
+              <AddItemForm
+                newItem={newItem}
+                onChange={setNewItem}
+                onSubmit={addItem}
+              />
 
+              {selectedList.items.map((item, idx) => (
+                <RowView key={item + idx} item={item} onRemove={removeItem} />
+              ))}
+
+              <ShareListForm
+                shareEmail={shareEmail}
+                onChange={setShareEmail}
+                onSubmit={() => shareList(selectedList.id, shareEmail.trim())}
+              />
+            </>
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
       <Toast />
     </SafeAreaView>
   );
