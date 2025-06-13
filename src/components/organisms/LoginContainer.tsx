@@ -8,6 +8,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   View,
+  ActivityIndicator,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useDispatch } from 'react-redux';
@@ -23,6 +24,7 @@ export const LoginContainer = ({ navigation }: { navigation: any }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const showToast = (type: 'success' | 'error', title: string, message: string) => {
     Toast.show({
@@ -50,6 +52,7 @@ export const LoginContainer = ({ navigation }: { navigation: any }) => {
     }
 
     try {
+      setLoading(true);
       const payload = {
         userName: email,
         email: `${email}@mail.com`,
@@ -69,6 +72,8 @@ export const LoginContainer = ({ navigation }: { navigation: any }) => {
     } catch (err: any) {
       const msg = err.response?.data?.message ?? 'Error al registrar usuario.';
       showToast('error', 'Error', msg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -89,18 +94,21 @@ export const LoginContainer = ({ navigation }: { navigation: any }) => {
     }
 
     try {
+      setLoading(true);
       const response = await axios.post(
         'https://topsecret-back-end.onrender.com/auth/login',
         { userName: email, password }
       );
-      console.log('API login response:', response.data);
+      console.log('API login response:', response.data); 
       const token = response.data.user.userName;
       dispatch(loginAction(token));
       showToast('success', '¡Bienvenido!', `Has iniciado sesión como ${token}.`);
       navigation.navigate('Home');
     } catch (err: any) {
       const msg = err.response?.data?.message ?? 'Error al iniciar sesión.';
-      showToast('error', 'Error', msg);
+      showToast('error', 'Error', msg); 
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -115,7 +123,8 @@ export const LoginContainer = ({ navigation }: { navigation: any }) => {
           <ScrollView contentContainerStyle={styles.container}>
             <View style={styles.inner}>
               <AppTitle />
-              <Icon uri="https://media.istockphoto.com/id/1435832173/es/vector/manos-sosteniendo-portapapeles-con-lista-de-verificaci%C3%B3n-con-marcas-de-verificaci%C3%B3n-verdes-y.jpg?s=612x612&w=0&k=20&c=PUT9UEVS8jM8a0rfwepcD5Hmi3Qll5LWTVMsiJ5onZs=" />
+              <Icon uri="https://media.istockphoto.com/id/1435832173/es/vector/manos-sosteniendo-portapapeles-con-lista-de-verificaci%C3%B3n-con-marcas-de-verificaci%C3%B3n-verdes-y.jpg" />
+
               <AuthForm
                 isLogin={isLogin}
                 email={email}
@@ -123,8 +132,14 @@ export const LoginContainer = ({ navigation }: { navigation: any }) => {
                 onEmailChange={setEmail}
                 onPasswordChange={setPassword}
                 onSubmit={isLogin ? handleLogin : handleRegister}
+                loading={loading} // pasa loading al formulario si lo soporta
               />
-              <AuthToggle isLogin={isLogin} onToggle={() => setIsLogin(!isLogin)} />
+
+              {loading ? (
+                <ActivityIndicator size="large" />
+              ) : (
+                <AuthToggle isLogin={isLogin} onToggle={() => setIsLogin(!isLogin)} />
+              )}
             </View>
           </ScrollView>
         </TouchableWithoutFeedback>

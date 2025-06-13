@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -18,29 +18,34 @@ import { RowView } from '../atoms/RowView';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout as logoutAction } from '../../store/authSlice';
 import {
-  createList as createListAction,
-  addItem as addItemAction,
+  createListAsync as createListAction,
+  addItemAsync as addItemAction,
   removeItem as removeItemAction,
-  shareList as shareListAction,
+  shareListAsync as shareListAction,
+  fetchListsByUser as fetchListsByUserAction,
 } from '../../store/listsSlice';
-import { RootState } from '../../store';
+import { RootState, AppDispatch } from '../../store';
 
 export const HomeContainer = ({ navigation }: { navigation: any }) => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.auth.user);
   const shoppingLists = useSelector((state: RootState) => state.lists.lists);
 
   const [listName, setListName] = useState('');
-  const [currentListId, setCurrentListId] = useState<string | null>(null);
+  const [currentListId, setCurrentListId] = useState<string | null>(null); 
   const [newItem, setNewItem] = useState('');
   const [shareEmail, setShareEmail] = useState('');
-
+useEffect(() => {
+  if (user) {
+    dispatch(fetchListsByUserAction(user));
+  }
+}, [dispatch, user]);
   const logout = () => {
     dispatch(logoutAction());
     setCurrentListId(null);
     navigation.pop();
   };
-
+  
   const createList = () => {
     if (!listName.trim()) return;
     const id = Date.now().toString();
@@ -81,7 +86,11 @@ export const HomeContainer = ({ navigation }: { navigation: any }) => {
         text2: 'Este usuario ya tiene acceso a la lista.',
       });
     }
-    dispatch(shareListAction({ listId, user: sharedUser }));
+    dispatch(shareListAction({
+      listId, user: sharedUser,
+      owner: null,
+      name: ''
+    }));
     setShareEmail('');
     Toast.show({
       type: 'success',
@@ -100,7 +109,8 @@ export const HomeContainer = ({ navigation }: { navigation: any }) => {
         text2: 'No puedes agregar un producto vacío.',
       });
     }
-    dispatch(addItemAction({ listId: currentListId!, item: newItem.trim() }));
+    console.log('currentListId', currentListId)
+    dispatch(addItemAction({ listId: currentListId!, item: newItem.trim(), user }));
     Toast.show({
       type: 'success',
       position: 'bottom',
@@ -120,11 +130,12 @@ export const HomeContainer = ({ navigation }: { navigation: any }) => {
     });
   };
 
+// Agrega esto para debug
   const userLists = shoppingLists.filter(
-    l => l.owner === user || (user != null && l.sharedWith.includes(user)),
+    l => l.creadoPor === user || (user != null && l.sharedWith.includes(user)),
   );
   const selectedList = shoppingLists.find(l => l.id === currentListId);
-
+  console.log('userLists', userLists); // Agrega esto para debug
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView

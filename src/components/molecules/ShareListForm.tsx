@@ -11,7 +11,7 @@ interface ShareListFormProps {
 
 export const ShareListForm: React.FC<ShareListFormProps> = ({ shareEmail, onChange, onSubmit }) => (
   <View>
-    <InputField placeholder="Compartir con (email)" value={shareEmail} onChangeText={onChange} />
+    <InputField placeholder="Compartir con ususio" value={shareEmail} onChangeText={onChange} />
     <PrimaryButton title="Compartir" onPress={onSubmit} disabled={!shareEmail} />
   </View>
 );

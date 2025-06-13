@@ -1,11 +1,12 @@
 import React from 'react';
 import { TextInput, StyleSheet } from 'react-native';
 
-interface InputFieldProps {
+export interface InputFieldProps {
   placeholder: string;
   value: string;
   onChangeText: (text: string) => void;
   secure?: boolean;
+  editable?: boolean;
 }
 
 export const InputField: React.FC<InputFieldProps> = ({
@@ -13,6 +14,7 @@ export const InputField: React.FC<InputFieldProps> = ({
   value,
   onChangeText,
   secure = false,
+  editable = true, // Default value for editable
 }) => {
   return (
     <TextInput
@@ -22,6 +24,7 @@ export const InputField: React.FC<InputFieldProps> = ({
       secureTextEntry={secure}
       value={value}
       onChangeText={onChangeText}
+      editable={editable}
     />
   );
 };
