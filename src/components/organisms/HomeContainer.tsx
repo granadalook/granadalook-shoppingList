@@ -20,7 +20,7 @@ import { logout as logoutAction } from '../../store/authSlice';
 import {
   createListAsync as createListAction,
   addItemAsync as addItemAction,
-  removeItem as removeItemAction,
+  deleteItemAsync as deleteItemAction,
   shareListAsync as shareListAction,
   fetchListsByUser as fetchListsByUserAction,
 } from '../../store/listsSlice';
@@ -109,7 +109,6 @@ useEffect(() => {
         text2: 'No puedes agregar un producto vacío.',
       });
     }
-    console.log('currentListId', currentListId)
     dispatch(addItemAction({ listId: currentListId!, item: newItem.trim(), user }));
     Toast.show({
       type: 'success',
@@ -121,7 +120,7 @@ useEffect(() => {
   };
 
   const removeItem = (item: string) => {
-    dispatch(removeItemAction({ listId: currentListId!, item }));
+    dispatch(deleteItemAction({ listId: currentListId!, item }));
     Toast.show({
       type: 'success',
       position: 'bottom',
@@ -131,9 +130,19 @@ useEffect(() => {
   };
 
 // Agrega esto para debug
-  const userLists = shoppingLists.filter(
-    l => l.creadoPor === user || (user != null && l.sharedWith.includes(user)),
-  );
+ function parseStringToArray(value: string | null): string[] {
+  if (!value) return [];
+  try {
+    return JSON.parse(value);
+  } catch {
+    return [];
+  }
+}
+
+const userLists = shoppingLists.filter(l => {
+  const creadoPorArray = parseStringToArray(l.creadoPor);
+  return creadoPorArray.includes(user ?? '') || l.sharedWith.includes(user ?? '');
+});
   const selectedList = shoppingLists.find(l => l.id === currentListId);
   console.log('userLists', userLists); // Agrega esto para debug
   return (

@@ -49,13 +49,12 @@ export const createListAsync = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      console.log('first', payload); 
       await axios.post('http://192.168.20.55:3000/entidad', {
         nombre: payload.name.toLowerCase(),
         pais: 'COLOMBIA',
         departamento: 'CALDAS',
         ciudad: 'VITERBO',
-        creadoPor: payload.owner,
+        creadoPor: JSON.stringify([payload.owner]),
       });
       return payload;
     } catch (err: any) {
@@ -63,8 +62,16 @@ export const createListAsync = createAsyncThunk(
     }
   }
 );
-
 // Thunk para obtener todas las listas de un usuario
+function parseStringToArray(value: string | null): string[] {
+  if (!value) return [];
+  try {
+    return JSON.parse(value);
+  } catch {
+    return [];
+  }
+}
+
 export const fetchListsByUser = createAsyncThunk(
   'lists/fetchListsByUser',
   async (userName: string, { rejectWithValue }) => {
@@ -72,22 +79,27 @@ export const fetchListsByUser = createAsyncThunk(
       const response = await axios.get<ShoppingListApi[]>(
         `http://192.168.20.55:3000/entidad/filterAll/${userName}`
       );
-      console.log('response', response); debugger
-      
+
       const lists: ShoppingList[] = response.data.map(entidad => ({
         id: entidad.id,
         nombre: entidad.nombre,
-        creadoPor: entidad.creadoPor,
-        sharedWith: [],
-       items: entidad.post?.map(p => p.texto) ?? []
+        creadoPor: entidad.creadoPor, // se mantiene como string
+        sharedWith: entidad.post?.map(p => p.idEntidad) ?? [],
+        items: entidad.post?.map(p => p.texto) ?? [],
       }));
-      return lists;
+
+      // 🔍 Filtro solo las listas donde el usuario está en creadoPor o en sharedWith
+      const userLists = lists.filter(list => {
+        const creadoPorArray = parseStringToArray(list.creadoPor);
+        return creadoPorArray.includes(userName) || list.sharedWith.includes(userName);
+      });
+      console.log('userLists', userLists);debugger
+      return userLists; 
     } catch (err: any) {
       return rejectWithValue(err.message);
     }
   }
 );
-
 // Thunk para compartir lista en remoto
 export const shareListAsync = createAsyncThunk(
   'lists/shareListAsync',
@@ -115,7 +127,6 @@ export const addItemAsync = createAsyncThunk(
     { listId, item, user }: { listId: string; item: string; user?: string | null },
     { rejectWithValue }
   ) => {
-    console.log('user', user);
     try {
       await axios.post('http://192.168.20.55:3000/post', {
         userName: user,
@@ -128,19 +139,31 @@ export const addItemAsync = createAsyncThunk(
     }
   }
 );
+export const deleteItemAsync = createAsyncThunk(
+  'lists/deleteItemAsync',
+  async (
+    { listId, item, user }: { listId: string; item: string; user?: string | null },
+    { rejectWithValue }
+  ) => {
+    try {
+      await axios.delete(`http://192.168.20.55:3000/post/${item}`, );
+      return { listId, item, user };
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
 const listsSlice = createSlice({
   name: 'lists',
   initialState,
   reducers: {
    addItem(state, action: PayloadAction<{ listId: string; item: string; user: string }>) {
   const list = state.lists.find(l => l.id === action.payload.listId);
-  if (list) { 
+    if (list) { 
     list.items.push(action.payload.item);
   }
 },
     removeItem(state, action: PayloadAction<{ listId: string; item: string }>) {
-
-      //  borrar de base de datos el nuevo item
       const list = state.lists.find(l => l.id === action.payload.listId);
       if (list) list.items = list.items.filter(i => i !== action.payload.item);
     },
@@ -151,6 +174,13 @@ const listsSlice = createSlice({
   const list = state.lists.find(l => l.id === action.payload.listId);
   if (list) {
     list.items.push(action.payload.item);
+  }
+});
+builder.addCase(deleteItemAsync.fulfilled, (state, action) => {
+  const { listId, item } = action.payload;
+  const list = state.lists.find(l => l.id === listId);
+  if (list) {
+    list.items = list.items.filter(i => i !== item);
   }
 });
 

@@ -64,7 +64,6 @@ export const LoginContainer = ({ navigation }: { navigation: any }) => {
         payload,
         { headers: { 'Content-Type': 'application/json' } }
       );
-      console.log('API register response:', response.data);
       showToast('success', '¡Registro exitoso!', `Usuario ${response.data.userName} creado.`);
       const token = response.data.userName;
       dispatch(loginAction(token));
@@ -99,7 +98,7 @@ export const LoginContainer = ({ navigation }: { navigation: any }) => {
         'https://topsecret-back-end.onrender.com/auth/login',
         { userName: email, password }
       );
-      console.log('API login response:', response.data); 
+      ('API login response:', response.data); 
       const token = response.data.user.userName;
       dispatch(loginAction(token));
       showToast('success', '¡Bienvenido!', `Has iniciado sesión como ${token}.`);
