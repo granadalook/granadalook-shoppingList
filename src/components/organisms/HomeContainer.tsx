@@ -49,7 +49,7 @@ useEffect(() => {
   const createList = () => {
     if (!listName.trim()) return;
     const id = Date.now().toString();
-    dispatch(createListAction({ id, name: listName.trim(), owner: user }));
+    dispatch(createListAction({ id, name: listName.trim(), owner: JSON.stringify([user]) }));
     setListName('');
     Toast.show({
       type: 'success',
@@ -144,7 +144,6 @@ const userLists = shoppingLists.filter(l => {
   return creadoPorArray.includes(user ?? '') || l.sharedWith.includes(user ?? '');
 });
   const selectedList = shoppingLists.find(l => l.id === currentListId);
-  console.log('userLists', userLists); // Agrega esto para debug
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView

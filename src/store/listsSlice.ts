@@ -49,12 +49,12 @@ export const createListAsync = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      await axios.post('http://192.168.20.55:3000/entidad', {
+      await axios.post('http://192.168.0.185:3000/entidad', {
         nombre: payload.name.toLowerCase(),
         pais: 'COLOMBIA',
         departamento: 'CALDAS',
         ciudad: 'VITERBO',
-        creadoPor: JSON.stringify([payload.owner]),
+        creadoPor: payload.owner,
       });
       return payload;
     } catch (err: any) {
@@ -77,7 +77,7 @@ export const fetchListsByUser = createAsyncThunk(
   async (userName: string, { rejectWithValue }) => {
     try {
       const response = await axios.get<ShoppingListApi[]>(
-        `http://192.168.20.55:3000/entidad/filterAll/${userName}`
+        `http://192.168.0.185:3000/entidad/filterAll/${userName}`
       );
 
       const lists: ShoppingList[] = response.data.map(entidad => ({
@@ -93,7 +93,6 @@ export const fetchListsByUser = createAsyncThunk(
         const creadoPorArray = parseStringToArray(list.creadoPor);
         return creadoPorArray.includes(userName) || list.sharedWith.includes(userName);
       });
-      console.log('userLists', userLists);debugger
       return userLists; 
     } catch (err: any) {
       return rejectWithValue(err.message);
@@ -109,11 +108,8 @@ export const shareListAsync = createAsyncThunk(
   ) => {
     try {
       // Usamos el mismo endpoint POST para agregar un nuevo registro indicando la compartición
-      await axios.post('https://topsecret-back-end.onrender.com/post', {
-        userName: payload.user,                // quien recibe la lista
-        texto: payload.name,                   // nombre de la lista
-        image: payload.image ?? '',
-        entidadId: payload.listId,
+      await axios.put(`http://192.168.0.185:3000/entidad/${payload.listId}`, {
+        creadoPor: payload.user,                // quien recibe la lista
       });
       return payload;
     } catch (err: any) {
@@ -128,7 +124,7 @@ export const addItemAsync = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      await axios.post('http://192.168.20.55:3000/post', {
+      await axios.post('http://192.168.0.185:3000/post', {
         userName: user,
         texto: item,
         entidadId: listId,
@@ -146,7 +142,7 @@ export const deleteItemAsync = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      await axios.delete(`http://192.168.20.55:3000/post/${item}`, );
+      await axios.delete(`http://192.168.0.185:3000/post/${item}`, );
       return { listId, item, user };
     } catch (err: any) {
       return rejectWithValue(err.message);
@@ -158,6 +154,7 @@ const listsSlice = createSlice({
   initialState,
   reducers: {
    addItem(state, action: PayloadAction<{ listId: string; item: string; user: string }>) {
+    console.log('action', action);debugger
   const list = state.lists.find(l => l.id === action.payload.listId);
     if (list) { 
     list.items.push(action.payload.item);
@@ -193,6 +190,7 @@ builder.addCase(addItemAsync.rejected, (state, action) => {
       state.error = null;
     });
     builder.addCase(createListAsync.fulfilled, (state, action) => {
+        console.log('action', action);debugger
       state.loading = false;
       state.lists.push({
         id: action.payload.id,
