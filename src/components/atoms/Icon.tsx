@@ -11,9 +11,9 @@ export const Icon: React.FC<IconProps> = ({ uri }) => (
 
 const styles = StyleSheet.create({
   icon: {
-    width: 100,
-    height: 100,
+    width: 200,
+    height: 200,
     marginBottom: 20,
-    alignSelf: 'center',  // centrado horizontal
+    alignSelf: 'center',
   },
 });

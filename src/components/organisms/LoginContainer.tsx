@@ -78,7 +78,7 @@ export const LoginContainer = ({ navigation }: { navigation: any }) => {
 
   const handleLogin = async () => {
     if (!email.trim() || !password) {
-      showToast('error', 'Error', 'Email y contraseña requeridos.');
+      showToast('error', 'Error', 'nickname y contraseña requeridos.');
       return;
     }
 
@@ -121,8 +121,7 @@ export const LoginContainer = ({ navigation }: { navigation: any }) => {
           <ScrollView contentContainerStyle={styles.container}>
             <View style={styles.inner}>
               <AppTitle />
-              <Icon uri="https://media.istockphoto.com/id/1435832173/es/vector/manos-sosteniendo-portapapeles-con-lista-de-verificaci%C3%B3n-con-marcas-de-verificaci%C3%B3n-verdes-y.jpg" />
-
+              <Icon uri="https://topsecret.sirv.com/Entidad/listas.png" />
               <AuthForm
                 isLogin={isLogin}
                 email={email}

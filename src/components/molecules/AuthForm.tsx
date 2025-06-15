@@ -25,7 +25,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
   <View style={styles.container}>
     <Text style={styles.title}>{isLogin ? 'Iniciar sesión' : 'Registrarse'}</Text>
     <InputField
-      placeholder="Email"
+      placeholder="Nickname"
       value={email}
       onChangeText={onEmailChange}
       editable={!loading}
