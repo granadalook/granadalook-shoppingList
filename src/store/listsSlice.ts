@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { BASE_URL } from '../config';
 import axios from 'axios';
 
 // Interface para respuesta de la API
@@ -49,7 +50,7 @@ export const createListAsync = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      await axios.post('http://192.168.20.55:3000/entidad', {
+      await axios.post(`${BASE_URL}/entidad`, {
         nombre: payload.name.toLowerCase(),
         pais: 'COLOMBIA',
         departamento: 'CALDAS',
@@ -77,7 +78,7 @@ export const fetchListsByUser = createAsyncThunk(
   async (userName: string, { rejectWithValue }) => {
     try {
       const response = await axios.get<ShoppingListApi[]>(
-        `http://192.168.20.55:3000/entidad/filterAll/${userName}`
+        `${BASE_URL}/entidad/filterAll/${userName}`
       );
 
       const lists: ShoppingList[] = response.data.map(entidad => ({
@@ -108,7 +109,7 @@ export const shareListAsync = createAsyncThunk(
   ) => {
     try {
       // Usamos el mismo endpoint POST para agregar un nuevo registro indicando la compartición
-      await axios.put(`http://192.168.20.55:3000/entidad/${payload.listId}`, {
+      await axios.put(`${BASE_URL}/entidad/${payload.listId}`, {
         creadoPor: payload.user,                // quien recibe la lista
       });
       return payload;
@@ -124,7 +125,7 @@ export const addItemAsync = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      await axios.post('http://192.168.20.55:3000/post', {
+      await axios.post(`${BASE_URL}/post`, {
         userName: user,
         texto: item,
         entidadId: listId,
@@ -142,7 +143,7 @@ export const deleteItemAsync = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      await axios.delete(`http://192.168.20.55:3000/post/${item}`, );
+      await axios.delete(`${BASE_URL}/post/${item}`, );
       return { listId, item, user };
     } catch (err: any) {
       return rejectWithValue(err.message);
