@@ -98,7 +98,6 @@ export const LoginContainer = ({ navigation }: { navigation: any }) => {
         'https://topsecret-back-end.onrender.com/auth/login',
         { userName: email, password }
       );
-      ('API login response:', response.data); 
       const token = response.data.user.userName;
       dispatch(loginAction(token));
       showToast('success', '¡Bienvenido!', `Has iniciado sesión como ${token}.`);
@@ -131,7 +130,7 @@ export const LoginContainer = ({ navigation }: { navigation: any }) => {
                 onEmailChange={setEmail}
                 onPasswordChange={setPassword}
                 onSubmit={isLogin ? handleLogin : handleRegister}
-                loading={loading} // pasa loading al formulario si lo soporta
+                loading={loading}
               />
 
               {loading ? (

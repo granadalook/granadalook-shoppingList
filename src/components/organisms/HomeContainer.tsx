@@ -68,15 +68,6 @@ useEffect(() => {
         text2: 'No puedes compartir con un usuario vacío.',
       });
     }
-    const emailPattern = /^[\w._-]+@[\w.-]+\.[A-Za-z]{2,6}$/;
-    if (!emailPattern.test(sharedUser)) {
-      return Toast.show({
-        type: 'error',
-        position: 'bottom',
-        text1: 'Error',
-        text2: 'Por favor, ingresa un correo válido.',
-      });
-    }
     const list = shoppingLists.find(l => l.id === listId);
     if (list?.sharedWith.includes(sharedUser)) {
       return Toast.show({
