@@ -26,7 +26,11 @@ export const LoginContainer = ({ navigation }: { navigation: any }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  const showToast = (type: 'success' | 'error', title: string, message: string) => {
+  const showToast = (
+    type: 'success' | 'error',
+    title: string,
+    message: string
+  ) => {
     Toast.show({
       type,
       position: type === 'error' ? 'bottom' : 'top',
@@ -35,10 +39,10 @@ export const LoginContainer = ({ navigation }: { navigation: any }) => {
     });
   };
 
-  const handleRegister = async () => {
+  const isValidForm = (): boolean => {
     if (!email.trim() || !password) {
       showToast('error', 'Error', 'Nombre de usuario y contraseña requeridos.');
-      return;
+      return false;
     }
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
@@ -48,15 +52,18 @@ export const LoginContainer = ({ navigation }: { navigation: any }) => {
         'Error',
         'La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.'
       );
-      return;
+      return false;
     }
-
+    return true;
+  };
+  const handleRegister = async () => {
+    if (!isValidForm()) return;
     try {
       setLoading(true);
       const payload = {
         userName: email,
         email: `${email}@mail.com`,
-        password: password,
+        password,
         politicas: true,
       };
       const response = await axios.post(
@@ -64,9 +71,9 @@ export const LoginContainer = ({ navigation }: { navigation: any }) => {
         payload,
         { headers: { 'Content-Type': 'application/json' } }
       );
-      showToast('success', '¡Registro exitoso!', `Usuario ${response.data.userName} creado.`);
       const token = response.data.userName;
       dispatch(loginAction(token));
+      showToast('success', '¡Registro exitoso!', `Usuario ${token} creado.`);
       navigation.navigate('Home');
     } catch (err: any) {
       const msg = err.response?.data?.message ?? 'Error al registrar usuario.';
@@ -77,20 +84,7 @@ export const LoginContainer = ({ navigation }: { navigation: any }) => {
   };
 
   const handleLogin = async () => {
-    if (!email.trim() || !password) {
-      showToast('error', 'Error', 'nickname y contraseña requeridos.');
-      return;
-    }
-
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
-    if (!passwordRegex.test(password)) {
-      showToast(
-        'error',
-        'Error',
-        'La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.'
-      );
-      return;
-    }
+    if (!isValidForm()) return;
 
     try {
       setLoading(true);
@@ -104,7 +98,7 @@ export const LoginContainer = ({ navigation }: { navigation: any }) => {
       navigation.navigate('Home');
     } catch (err: any) {
       const msg = err.response?.data?.message ?? 'Error al iniciar sesión.';
-      showToast('error', 'Error', msg); 
+      showToast('error', 'Error', msg);
     } finally {
       setLoading(false);
     }
@@ -121,7 +115,7 @@ export const LoginContainer = ({ navigation }: { navigation: any }) => {
           <ScrollView contentContainerStyle={styles.container}>
             <View style={styles.inner}>
               <AppTitle />
-              <Icon uri="https://topsecret.sirv.com/Entidad/listas.png" />
+              <Icon uri='https://topsecret.sirv.com/Entidad/listas.png' />
               <AuthForm
                 isLogin={isLogin}
                 email={email}
@@ -131,9 +125,8 @@ export const LoginContainer = ({ navigation }: { navigation: any }) => {
                 onSubmit={isLogin ? handleLogin : handleRegister}
                 loading={loading}
               />
-
               {loading ? (
-                <ActivityIndicator size="large" />
+                <ActivityIndicator size='large' />
               ) : (
                 <AuthToggle isLogin={isLogin} onToggle={() => setIsLogin(!isLogin)} />
               )}
