@@ -5,6 +5,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  View,
+  Text,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { HeaderTitle } from '../atoms/HeaderTitle';
@@ -32,50 +34,46 @@ export const HomeContainer = ({ navigation }: { navigation: any }) => {
   const shoppingLists = useSelector((state: RootState) => state.lists.lists);
 
   const [listName, setListName] = useState('');
-  const [currentListId, setCurrentListId] = useState<string | null>(null); 
+  const [currentListId, setCurrentListId] = useState<string | null>(null);
   const [newItem, setNewItem] = useState('');
   const [shareEmail, setShareEmail] = useState('');
-useEffect(() => {
-  if (user) {
-    dispatch(fetchListsByUserAction(user));
-  }
-}, [dispatch, user]);
+
+  useEffect(() => {
+    if (user) {
+      dispatch(fetchListsByUserAction(user));
+    }
+  }, [dispatch, user]);
+
+  const showToast = (
+    type: 'success' | 'error',
+    text1: string,
+    text2?: string,
+    position: 'top' | 'bottom' = 'top'
+  ) => {
+    Toast.show({ type, position, text1, text2 });
+  };
+
   const logout = () => {
     dispatch(logoutAction());
     setCurrentListId(null);
     navigation.pop();
   };
-  
+
   const createList = () => {
     if (!listName.trim()) return;
     const id = Date.now().toString();
     dispatch(createListAction({ id, name: listName.trim(), owner: JSON.stringify([user]) }));
+    showToast('success', 'Lista creada', `La lista "${listName.trim()}" ha sido creada.`);
     setListName('');
-    Toast.show({
-      type: 'success',
-      position: 'top',
-      text1: 'Lista creada',
-      text2: `La lista "${listName.trim()}" ha sido creada.`,
-    });
   };
 
   const shareList = (listId: string, sharedUser: string) => {
     if (!sharedUser.trim()) {
-      return Toast.show({
-        type: 'error',
-        position: 'bottom',
-        text1: 'Error',
-        text2: 'No puedes compartir con un usuario vacío.',
-      });
+      return showToast('error', 'Error', 'No puedes compartir con un usuario vacío.', 'bottom');
     }
     const list = shoppingLists.find(l => l.id === listId);
     if (list?.sharedWith.includes(sharedUser)) {
-      return Toast.show({
-        type: 'error',
-        position: 'bottom',
-        text1: 'Error',
-        text2: 'Este usuario ya tiene acceso a la lista.',
-      });
+      return showToast('error', 'Error', 'Este usuario ya tiene acceso a la lista.', 'bottom');
     }
     dispatch(shareListAction({
       listId, user: sharedUser,
@@ -83,58 +81,41 @@ useEffect(() => {
       name: ''
     }));
     setShareEmail('');
-    Toast.show({
-      type: 'success',
-      position: 'top',
-      text1: 'Compartido',
-      text2: `Lista compartida con ${sharedUser}`,
-    });
+    showToast('success', 'Compartido', `Lista compartida con ${sharedUser}`);
   };
 
   const addItem = () => {
     if (!newItem.trim()) {
-      return Toast.show({
-        type: 'error',
-        position: 'bottom',
-        text1: 'Error',
-        text2: 'No puedes agregar un producto vacío.',
-      });
+      return showToast('error', 'Error', 'No puedes agregar un producto vacío.', 'bottom');
     }
     dispatch(addItemAction({ listId: currentListId!, item: newItem.trim(), user }));
-    Toast.show({
-      type: 'success',
-      position: 'bottom',
-      text1: 'Producto agregado',
-      text2: `"${newItem.trim()}" agregado.`,
-    });
+    showToast('success', 'Producto agregado', `"${newItem.trim()}" agregado.`, 'bottom');
     setNewItem('');
   };
 
   const removeItem = (item: string) => {
     dispatch(deleteItemAction({ listId: currentListId!, item }));
-    Toast.show({
-      type: 'success',
-      position: 'bottom',
-      text1: 'Producto eliminado',
-      text2: `"${item}" eliminado.`,
-    });
+    showToast('success', 'Producto eliminado', `"${item}" eliminado.`, 'bottom');
   };
 
-// Agrega esto para debug
- function parseStringToArray(value: string | null): string[] {
-  if (!value) return [];
-  try {
-    return JSON.parse(value);
-  } catch {
-    return [];
-  }
-}
+  const parseStringToArray = (value: string | null): string[] => {
+    if (!value) return [];
+    try {
+      return JSON.parse(value);
+    } catch {
+      return [];
+    }
+  };
 
-const userLists = shoppingLists.filter(l => {
-  const creadoPorArray = parseStringToArray(l.creadoPor);
-  return creadoPorArray.includes(user ?? '') || l.sharedWith.includes(user ?? '');
-});
+  const userLists = shoppingLists.filter(l => {
+    const creadoPorArray = parseStringToArray(l.creadoPor);
+    return creadoPorArray.includes(user ?? '') || l.sharedWith.includes(user ?? '');
+  });
+
   const selectedList = shoppingLists.find(l => l.id === currentListId);
+
+  if (!user) return null; // Protección mínima por si no hay usuario cargado
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -142,37 +123,41 @@ const userLists = shoppingLists.filter(l => {
         style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerStyle={{ paddingBottom: 100 }}
+          contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps='handled'
         >
-          <HeaderTitle user={user ?? 'Invitado'} />
-          <LogoutButton onPress={logout} />
+          <View style={styles.section}>
+            <HeaderTitle user={user} />
+            <LogoutButton onPress={logout} />
+          </View>
 
-          <CreateListForm
-            listName={listName}
-            onChange={setListName}
-            onSubmit={createList}
-          />
+          <View style={styles.section}>
+            <CreateListForm listName={listName} onChange={setListName} onSubmit={createList} />
+          </View>
 
-          <ListSelector lists={userLists} onSelect={setCurrentListId} />
+          <View style={styles.section}>
+            <ListSelector lists={userLists} onSelect={setCurrentListId} />
+          </View>
 
           {selectedList && (
             <>
-              <AddItemForm
-                newItem={newItem}
-                onChange={setNewItem}
-                onSubmit={addItem}
-              />
+              <Text style={styles.listName}>Lista actual: {selectedList.nombre}</Text>
+
+              <View style={styles.section}>
+                <AddItemForm newItem={newItem} onChange={setNewItem} onSubmit={addItem} />
+              </View>
 
               {selectedList.items.map((item, idx) => (
                 <RowView key={item + idx} item={item} onRemove={removeItem} />
               ))}
 
-              <ShareListForm
-                shareEmail={shareEmail}
-                onChange={setShareEmail}
-                onSubmit={() => shareList(selectedList.id, shareEmail.trim())}
-              />
+              <View style={styles.section}>
+                <ShareListForm
+                  shareEmail={shareEmail}
+                  onChange={setShareEmail}
+                  onSubmit={() => shareList(selectedList.id, shareEmail.trim())}
+                />
+              </View>
             </>
           )}
         </ScrollView>
@@ -187,5 +172,17 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     marginTop: 40,
+  },
+  scroll: {
+    paddingBottom: 100,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  listName: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#444',
   },
 });

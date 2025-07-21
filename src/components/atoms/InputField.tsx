@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextInput, StyleSheet } from 'react-native';
+import { TextInput, StyleSheet, useColorScheme } from 'react-native';
 
 export interface InputFieldProps {
   placeholder: string;
@@ -14,13 +14,19 @@ export const InputField: React.FC<InputFieldProps> = ({
   value,
   onChangeText,
   secure = false,
-  editable = true, // Default value for editable
+  editable = true,
 }) => {
+  const isDarkMode = useColorScheme() === 'dark';
+
   return (
     <TextInput
-      style={styles.input}
+      style={[
+        styles.input,
+        isDarkMode && styles.inputDark,
+        !editable && styles.disabled,
+      ]}
       placeholder={placeholder}
-      placeholderTextColor="#999"
+      placeholderTextColor={isDarkMode ? '#aaa' : '#777'}
       secureTextEntry={secure}
       value={value}
       onChangeText={onChangeText}
@@ -33,10 +39,20 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    marginBottom: 16,
+    fontSize: 16,
     color: '#000',
     backgroundColor: '#fff',
+  },
+  inputDark: {
+    borderColor: '#444',
+    color: '#fff',
+    backgroundColor: '#1c1c1e',
+  },
+  disabled: {
+    opacity: 0.5,
   },
 });

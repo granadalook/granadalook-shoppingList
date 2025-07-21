@@ -1,5 +1,10 @@
 import React from 'react';
-import { Text, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  useColorScheme,
+} from 'react-native';
 
 interface ListItemProps {
   name: string;
@@ -8,12 +13,25 @@ interface ListItemProps {
 }
 
 export const ListItem: React.FC<ListItemProps> = ({ name, onPress, isSelected }) => {
+  const isDarkMode = useColorScheme() === 'dark';
+
   return (
     <TouchableOpacity
       onPress={onPress}
-      style={[styles.item, isSelected && styles.itemSelected]}
+      style={[
+        styles.item,
+        isDarkMode && styles.itemDark,
+        isSelected && styles.itemSelected,
+      ]}
+      activeOpacity={0.8}
     >
-      <Text style={[styles.text, isSelected && styles.textSelected]}>
+      <Text
+        style={[
+          styles.text,
+          isDarkMode && styles.textDark,
+          isSelected && styles.textSelected,
+        ]}
+      >
         {name}
       </Text>
     </TouchableOpacity>
@@ -22,19 +40,31 @@ export const ListItem: React.FC<ListItemProps> = ({ name, onPress, isSelected })
 
 const styles = StyleSheet.create({
   item: {
-    padding: 12,
-    backgroundColor: '#f2f2f2',
-    marginVertical: 4,
-    borderRadius: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: '#f5f5f5',
+    marginVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  itemDark: {
+    backgroundColor: '#1e1e1e',
+    borderColor: '#333',
   },
   itemSelected: {
-    backgroundColor: '#4caf50',
+    backgroundColor: '#3b82f6', // azul moderno
+    borderColor: '#2563eb',
   },
   text: {
-    color: '#000',
+    fontSize: 16,
+    color: '#222',
+  },
+  textDark: {
+    color: '#eaeaea',
   },
   textSelected: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
 });

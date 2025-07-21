@@ -56,6 +56,7 @@ export const LoginContainer = ({ navigation }: { navigation: any }) => {
     }
     return true;
   };
+
   const handleRegister = async () => {
     if (!isValidForm()) return;
     try {
@@ -85,7 +86,6 @@ export const LoginContainer = ({ navigation }: { navigation: any }) => {
 
   const handleLogin = async () => {
     if (!isValidForm()) return;
-
     try {
       setLoading(true);
       const response = await axios.post(
