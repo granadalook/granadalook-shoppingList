@@ -1,5 +1,11 @@
 import React from 'react';
-import { TextInput, StyleSheet, useColorScheme } from 'react-native';
+import {
+  TextInput,
+  StyleSheet,
+  useColorScheme,
+  Platform,
+  ViewStyle,
+} from 'react-native';
 
 export interface InputFieldProps {
   placeholder: string;
@@ -24,9 +30,10 @@ export const InputField: React.FC<InputFieldProps> = ({
         styles.input,
         isDarkMode && styles.inputDark,
         !editable && styles.disabled,
+        Platform.OS === 'ios' && !isDarkMode && styles.shadowIOS,
       ]}
       placeholder={placeholder}
-      placeholderTextColor={isDarkMode ? '#aaa' : '#777'}
+      placeholderTextColor={isDarkMode ? '#888' : '#999'}
       secureTextEntry={secure}
       value={value}
       onChangeText={onChangeText}
@@ -35,24 +42,35 @@ export const InputField: React.FC<InputFieldProps> = ({
   );
 };
 
+const baseInput: ViewStyle = {
+  borderWidth: 1,
+  borderRadius: 12,
+  paddingVertical: 14,
+  paddingHorizontal: 18,
+
+  marginBottom: 16,
+};
+
 const styles = StyleSheet.create({
   input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    marginBottom: 16,
-    fontSize: 16,
-    color: '#000',
-    backgroundColor: '#fff',
+    ...baseInput,
+    borderColor: '#d1d5db',
+    backgroundColor: '#f9fafb',
+    color: '#111827',
   },
   inputDark: {
-    borderColor: '#444',
-    color: '#fff',
-    backgroundColor: '#1c1c1e',
+    ...baseInput,
+    borderColor: '#333',
+    backgroundColor: '#1e1e1e',
+    color: '#f3f4f6',
   },
   disabled: {
-    opacity: 0.5,
+    opacity: 0.6,
+  },
+  shadowIOS: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
   },
 });

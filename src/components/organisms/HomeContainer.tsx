@@ -7,6 +7,7 @@ import {
   ScrollView,
   View,
   Text,
+  useColorScheme,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { HeaderTitle } from '../atoms/HeaderTitle';
@@ -16,9 +17,10 @@ import { ListSelector } from '../molecules/ListSelector';
 import { AddItemForm } from '../molecules/AddItemForm';
 import { ShareListForm } from '../molecules/ShareListForm';
 import { RowView } from '../atoms/RowView';
-
 import { useDispatch, useSelector } from 'react-redux';
-import { logout as logoutAction } from '../../store/authSlice';
+import {
+  logout as logoutAction,
+} from '../../store/authSlice';
 import {
   createListAsync as createListAction,
   addItemAsync as addItemAction,
@@ -29,6 +31,7 @@ import {
 import { RootState, AppDispatch } from '../../store';
 
 export const HomeContainer = ({ navigation }: { navigation: any }) => {
+  const isDarkMode = useColorScheme() === 'dark';
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.auth.user);
   const shoppingLists = useSelector((state: RootState) => state.lists.lists);
@@ -78,7 +81,7 @@ export const HomeContainer = ({ navigation }: { navigation: any }) => {
     dispatch(shareListAction({
       listId, user: sharedUser,
       owner: null,
-      name: ''
+      name: '',
     }));
     setShareEmail('');
     showToast('success', 'Compartido', `Lista compartida con ${sharedUser}`);
@@ -114,10 +117,10 @@ export const HomeContainer = ({ navigation }: { navigation: any }) => {
 
   const selectedList = shoppingLists.find(l => l.id === currentListId);
 
-  if (!user) return null; // Protección mínima por si no hay usuario cargado
+  if (!user) return null;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, isDarkMode && styles.containerDark]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'android' ? undefined : 'padding'}
         style={{ flex: 1 }}
@@ -141,7 +144,9 @@ export const HomeContainer = ({ navigation }: { navigation: any }) => {
 
           {selectedList && (
             <>
-              <Text style={styles.listName}>Lista actual: {selectedList.nombre}</Text>
+              <Text style={[styles.listName, isDarkMode && styles.listNameDark]}>
+                📝 Lista seleccionada: <Text style={styles.listNameBold}>{selectedList.nombre}</Text>
+              </Text>
 
               <View style={styles.section}>
                 <AddItemForm newItem={newItem} onChange={setNewItem} onSubmit={addItem} />
@@ -170,19 +175,30 @@ export const HomeContainer = ({ navigation }: { navigation: any }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    marginTop: 40,
+    paddingHorizontal: 20,
+    paddingTop: 40,
+    backgroundColor: '#f9f9f9',
+  },
+  containerDark: {
+    backgroundColor: '#121212',
   },
   scroll: {
-    paddingBottom: 100,
+    paddingBottom: 80,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 28,
   },
   listName: {
     fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#444',
+    fontWeight: '500',
+    marginBottom: 12,
+    color: '#374151',
+  },
+  listNameDark: {
+    color: '#e5e7eb',
+  },
+  listNameBold: {
+    fontWeight: '700',
+    color: '#3b82f6',
   },
 });
