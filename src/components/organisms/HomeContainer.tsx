@@ -139,7 +139,10 @@ export const HomeContainer = ({ navigation }: { navigation: any }) => {
           </View>
 
           <View style={styles.section}>
-            <ListSelector lists={userLists} onSelect={setCurrentListId} />
+<ListSelector
+  lists={userLists}
+  onSelect={(listId) => navigation.navigate('ListDetail', { listId })}
+/>
           </View>
 
           {selectedList && (
@@ -160,7 +163,11 @@ export const HomeContainer = ({ navigation }: { navigation: any }) => {
                 <ShareListForm
                   shareEmail={shareEmail}
                   onChange={setShareEmail}
-                  onSubmit={() => shareList(selectedList.id, shareEmail.trim())}
+                  onSubmit={() => {
+                    if (selectedList.id) {
+                      shareList(selectedList.id, shareEmail.trim());
+                    }
+                  }}
                 />
               </View>
             </>
