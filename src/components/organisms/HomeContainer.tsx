@@ -30,14 +30,20 @@ import {
 } from '../../store/listsSlice';
 import { RootState, AppDispatch } from '../../store';
 
-export const HomeContainer = ({ navigation }: { navigation: any }) => {
+export const HomeContainer = ({
+  navigation,
+  initialListId = null,
+}: {
+  navigation: any;
+  initialListId?: string | null;
+}) => {
   const isDarkMode = useColorScheme() === 'dark';
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.auth.user);
   const shoppingLists = useSelector((state: RootState) => state.lists.lists);
 
   const [listName, setListName] = useState('');
-  const [currentListId, setCurrentListId] = useState<string | null>(null);
+ const [currentListId, setCurrentListId] = useState<string | null>(initialListId);
   const [newItem, setNewItem] = useState('');
   const [shareEmail, setShareEmail] = useState('');
 

@@ -29,13 +29,14 @@ export const RowView: React.FC<RowViewProps> = ({ item, onRemove }) => {
         <Text style={[styles.text, isDarkMode && styles.textDark]}>{item}</Text>
       </View>
 
-      <TouchableOpacity
-        onPress={() => onRemove(item)}
-        style={[styles.removeButton, isDarkMode && styles.removeButtonDark]}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.removeButtonText}>🗑 </Text>
-      </TouchableOpacity>
+   <TouchableOpacity
+  onPress={() => onRemove(item)}
+  style={[styles.removeButton, isDarkMode && styles.removeButtonDark]}
+  activeOpacity={0.8}
+  testID={`delete-${item}`} // 👈 Agregado aquí
+>
+  <Text style={styles.removeButtonText}>🗑</Text>
+</TouchableOpacity>
     </View>
   );
 };

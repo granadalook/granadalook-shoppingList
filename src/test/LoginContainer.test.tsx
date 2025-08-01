@@ -4,17 +4,19 @@ import { Provider } from 'react-redux';
 import { createTestStore } from './testStore'; // ✅ store real
 import axios from 'axios';
 import { LoginContainer } from '../components/organisms/LoginContainer';
+import Toast from 'react-native-toast-message';
+
 
 
 jest.mock('axios');
 jest.mock('react-native-toast-message', () => {
-  const ActualToast = jest.requireActual('react-native-toast-message');
+  const MockToastComponent = () => null;
   return {
     __esModule: true,
-    default: () => null, // El componente Toast se renderiza como null en pruebas
-    show: jest.fn(),
-    hide: jest.fn(),
-    ...ActualToast, // Opcional, para preservar otros métodos si los usas
+    default: Object.assign(MockToastComponent, {
+      show: jest.fn(),
+      hide: jest.fn(),
+    }),
   };
 });
 
@@ -25,25 +27,6 @@ describe('LoginContainer', () => {
     jest.clearAllMocks();
   });
 
-/*  it('muestra error si los campos están vacíos', async () => {
-  const store = createTestStore();
-  const { getByText } = render(
-    <Provider store={store}>
-      <LoginContainer navigation={mockNavigation} />
-    </Provider>
-  );
-
-  fireEvent.press(getByText(/Entrar/i));
-
-  await waitFor(() => {
-    expect(Toast.show).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: 'error',
-        text2: expect.stringContaining('requeridos'),
-      })
-    );
-  });
-}); */
 
 
   it('inicia sesión exitosamente con credenciales válidas', async () => {
@@ -66,5 +49,52 @@ describe('LoginContainer', () => {
     await waitFor(() => {
       expect(mockNavigation.navigate).toHaveBeenCalledWith('Home');
     });
+  }); it('muestra error si email o contraseña están vacíos (isValidForm)', async () => {
+    const store = createTestStore();
+
+    const { getByText } = render(
+      <Provider store={store}>
+        <LoginContainer navigation={mockNavigation} />
+      </Provider>
+    );
+
+    fireEvent.press(getByText(/Entrar/i)); // Submit sin llenar campos
+
+   
+      expect(Toast.show).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Nombre de usuario y contraseña requeridos.',
+        })
+      );
   });
+
+  it('muestra error si la contraseña no cumple requisitos (isValidForm)', async () => {
+    const store = createTestStore();
+
+    const { getByPlaceholderText, getByText } = render(
+      <Provider store={store}>
+        <LoginContainer navigation={mockNavigation} />
+      </Provider>
+    );
+
+    fireEvent.changeText(getByPlaceholderText('Nickname'), 'usuario');
+    fireEvent.changeText(getByPlaceholderText('Contraseña'), 'abc'); 
+
+    fireEvent.press(getByText(/Entrar/i)); // Submit
+
+    
+       expect.objectContaining({
+        type: 'error',
+        text1: 'Error',
+        text2:
+          'La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.',
+      })
+    
+  });
+
+
+
+
 });

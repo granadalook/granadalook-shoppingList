@@ -1,23 +1,24 @@
-// src/test/ListContainer.test.tsx
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { Provider } from 'react-redux';
-import { createTestStore } from './testStore';
-
 import Toast from 'react-native-toast-message';
 import { ListContainer } from '../components/organisms/ListDetailScreen';
+import { createTestStore } from './testStore';
 
-jest.mock('react-native-toast-message', () => ({
-  show: jest.fn(),
-  __esModule: true,
-  default: () => null,
-}));
-
-const mockRoute = {
-  params: { listId: '1' },
-};
+jest.mock('react-native-toast-message', () => {
+  const MockToastComponent = () => null;
+  return {
+    __esModule: true,
+    default: Object.assign(MockToastComponent, {
+      show: jest.fn(),
+      hide: jest.fn(),
+    }),
+  };
+});
+const mockRoute = { params: { listId: '1' } };
 
 describe('ListContainer', () => {
+afterEach(() => jest.clearAllMocks());
   it('muestra los ítems de la lista correctamente', () => {
     const store = createTestStore({
       auth: { user: 'usuarioEjemplo' },
@@ -45,41 +46,7 @@ describe('ListContainer', () => {
     expect(getByText(/Leche/i)).toBeTruthy();
   });
 
-/*   it('permite agregar un nuevo ítem', () => {
-    const store = createTestStore({
-      auth: { user: 'usuarioEjemplo' },
-      lists: {
-        lists: [
-          {
-            id: '1',
-            nombre: 'Lista de prueba',
-            creadoPor: 'usuarioEjemplo',
-            sharedWith: [],
-            items: [],
-          },
-        ],
-      },
-    });
-
-    const { getByPlaceholderText, getByText } = render(
-      <Provider store={store}>
-        <ListContainer route={mockRoute} navigation={{}} />
-      </Provider>
-    );
-
-    const input = getByPlaceholderText(/Nuevo producto/i);
-    fireEvent.changeText(input, 'Huevos');
-    fireEvent.press(getByText(/Agregar/i));
-
-    expect(Toast.show).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: 'success',
-        text1: 'Producto agregado',
-        text2: '"Huevos" agregado.',
-      })
-    );
-  }); */
-
+  
   it('muestra mensaje si la lista no existe', () => {
     const store = createTestStore({
       auth: { user: 'usuarioEjemplo' },
@@ -95,39 +62,38 @@ describe('ListContainer', () => {
     expect(getByText(/Lista no encontrada/i)).toBeTruthy();
   });
 
- /*  it('muestra error si se comparte con email vacío', () => {
+  it('permite agregar un nuevo ítem', () => {
     const store = createTestStore({
       auth: { user: 'usuarioEjemplo' },
       lists: {
-        lists: [
-          {
-            id: '1',
-            nombre: 'Lista de prueba',
-            creadoPor: 'usuarioEjemplo',
-            sharedWith: [],
-            items: [],
-          },
-        ],
+        lists: [{
+          id: '1',
+          nombre: 'Lista de prueba',
+          creadoPor: 'usuarioEjemplo',
+          sharedWith: [],
+          items: [],
+        }],
       },
     });
 
-    const { getByText } = render(
+    const { getByPlaceholderText, getByText } = render(
       <Provider store={store}>
         <ListContainer route={mockRoute} navigation={{}} />
       </Provider>
     );
 
-    fireEvent.press(getByText(/Compartir/i));
+    fireEvent.changeText(getByPlaceholderText(/Nuevo producto/i), 'Huevos');
+    fireEvent.press(getByText(/Agregar producto/i));
     expect(Toast.show).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Correo vacío',
-      })
-    );
+  expect.objectContaining({
+    type: 'success',
+    text1: 'Producto agregado',
+    text2: '"Huevos" agregado.',
+  }),
+);
   });
 
-  it('muestra error si se comparte con un email ya existente', () => {
+    it('muestra error si se comparte con un email ya existente', () => {
     const store = createTestStore({
       auth: { user: 'usuarioEjemplo' },
       lists: {
@@ -159,5 +125,5 @@ describe('ListContainer', () => {
         text2: 'Ya compartida con este usuario',
       })
     );
-  }); */
+  });
 });
