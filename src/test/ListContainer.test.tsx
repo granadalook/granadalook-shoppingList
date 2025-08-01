@@ -126,4 +126,114 @@ afterEach(() => jest.clearAllMocks());
       })
     );
   });
+
+it('muestra mensaje al eliminar un producto', () => {
+  const store = createTestStore({
+    auth: { user: 'usuarioEjemplo' },
+    lists: {
+      lists: [
+        {
+          id: '1',
+          nombre: 'Lista de prueba',
+          creadoPor: 'usuarioEjemplo',
+          sharedWith: [],
+          items: ['Pan'],
+        },
+      ],
+    },
+  });
+
+  const { getByTestId } = render(
+    <Provider store={store}>
+      <ListContainer route={mockRoute} navigation={{}} />
+    </Provider>
+  );
+
+  fireEvent.press(getByTestId('delete-Pan'));
+
+  expect(Toast.show).toHaveBeenCalledWith(
+    expect.objectContaining({
+      type: 'success',
+      text1: 'Producto eliminado',
+      text2: '"Pan" eliminado.',
+    })
+  );
+});
+
+/////////////////
+
+
+it('muestra error si se comparte con un email ya existente', () => {
+  const store = createTestStore({
+    auth: { user: 'usuarioEjemplo' },
+    lists: {
+      lists: [
+        {
+          id: '1',
+          nombre: 'Lista de prueba',
+          creadoPor: 'usuarioEjemplo',
+          sharedWith: ['correo@ejemplo.com'],
+          items: [],
+        },
+      ],
+    },
+  });
+
+  const { getByPlaceholderText, getByText } = render(
+    <Provider store={store}>
+      <ListContainer route={mockRoute} navigation={{}} />
+    </Provider>
+  );
+
+  fireEvent.changeText(getByPlaceholderText(/Compartir con usuario/i), 'correo@ejemplo.com');
+  fireEvent.press(getByText(/Compartir/i));
+
+  expect(Toast.show).toHaveBeenCalledWith(
+    expect.objectContaining({
+      type: 'error',
+      text1: 'Error',
+      text2: 'Ya compartida con este usuario',
+    })
+  );
+});
+
+
+it('comparte correctamente con un nuevo usuario', () => {
+  const store = createTestStore({
+    auth: { user: 'usuarioEjemplo' },
+    lists: {
+      lists: [
+        {
+          id: '1',
+          nombre: 'Lista de prueba',
+          creadoPor: 'usuarioEjemplo',
+          sharedWith: [],
+          items: [],
+        },
+      ],
+    },
+  });
+
+  store.dispatch = jest.fn();
+
+  const { getByPlaceholderText, getByText } = render(
+    <Provider store={store}>
+      <ListContainer route={mockRoute} navigation={{}} />
+    </Provider>
+  );
+
+  fireEvent.changeText(getByPlaceholderText(/Compartir con usuario/i), 'nuevo@correo.com');
+  fireEvent.press(getByText(/Compartir/i));
+
+  expect(store.dispatch).toHaveBeenCalledWith(expect.any(Function)); // thunk
+  expect(Toast.show).toHaveBeenCalledWith(
+    expect.objectContaining({
+      type: 'success',
+      text1: 'Compartido',
+      text2: 'Compartido con nuevo@correo.com',
+    })
+  );
+});
+
+
 });
