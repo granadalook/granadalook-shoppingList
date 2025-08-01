@@ -1,13 +1,11 @@
-/**
- * @format
- */
-
+// __tests__/App.test.tsx
 import React from 'react';
-import ReactTestRenderer from 'react-test-renderer';
-import App from '../App';
+import { render } from '@testing-library/react-native';
+import RootApp from '../App';
 
-test('renders correctly', async () => {
-  await ReactTestRenderer.act(() => {
-    ReactTestRenderer.create(<App />);
+describe('App navigation', () => {
+  it('debe renderizar la pantalla de Login por defecto', () => {
+    const { getByText } = render(<RootApp />);
+    expect(getByText('Iniciar sesión')).toBeTruthy();
   });
 });
