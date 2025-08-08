@@ -40,6 +40,7 @@ export const ListContainer = ({ route, navigation: _navigation }: any) => {
   };
 
   const addItem = () => {
+    console.log('listId addItem', listId)
     if (!newItem.trim()) return;
     dispatch(addItemAsync({ listId, item: newItem.trim(), user }));
     setNewItem('');

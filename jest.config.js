@@ -17,7 +17,6 @@ module.exports = {
     '!src/**/index.ts',
     '!src/**/types.ts',
     '!src/store/**',
-    '!/src/components/atoms/AuthToggle.tsx',
     '!src/test/**',
   ],
 };
